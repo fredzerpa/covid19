@@ -105,26 +105,41 @@ def chequear_estado_paciente(usuario):
         print("El paciente ha fallecido.")
 
 
+def volver_al_menu_msg():
+    while True:
+        volver = input("Desea volver al Menu Principal? (Y/N): ").lower()
+        if volver == "y":
+            return True
+        elif volver == "n":
+            return False
+
+
 registros = {
     "sospechosos": [],
     "contagiados": [],
     "recuperados": [],
-    "fallecidos": []
+    "fallecidos": [],
+    "sintomas": {
+        "covid19": ["secreciones nasales", "dolor de garganta", "tos", "fiebre", "dificultad para respirar"],
+        ""
+    }
 }
 
 print(end="\n\n")
 print("Bienvenido al registro de Covid-19")
-opcion_seleccionada = mostrar_menu()
+while True:
+    opcion_seleccionada = mostrar_menu()
+    if opcion_seleccionada == 1:  # Registrar Usuario Sospechoso
+        desea_continuar = True
+        while desea_continuar:
+            try:
+                registros["sospechosos"].append(registrar_usuario())
+            except:
+                print("Hubo un error al registrar el usuario por favor intentelo de nuevo")
+            else:
+                print("\t Se ha registrado el usuario exitosamente en la lista de sospechosos.", end="\n\n")
+                desea_continuar = volver_al_menu_msg()
+    elif opcion_seleccionada == 2:  # Modificar Casos
 
-if opcion_seleccionada == 1:
-    try:
-        registros["sospechosos"].append(registrar_usuario())
-    except:
-        print("Hubo un error al registrar el usuario por favor intentelo de nuevo")
-    else:
-        print("\t Se ha registrado el usuario exitosamente en la lista de sospechosos.", end="\n\n")
-        
-elif opcion_seleccionada == 2:
-
-else:
-    pass
+    else:  # Mostrar Registros
+        pass
