@@ -85,7 +85,7 @@ def mostrar_menu_opciones():
         print(" 1. Sospechosos.")
         print(" 2. Descartados.")
         print(" 3. Contagiados.")
-        print(" 4. Curados.")
+        print(" 4. Recuperados.")
         print(" 5. Fallecidos.")
         try:
             opcion = int(input("Opcion: "))
@@ -93,7 +93,7 @@ def mostrar_menu_opciones():
             print("\"Escoja una opcion valida\"")
         else:
             if 1 <= opcion <= 5:
-                opcion = "sospechosos" if opcion == 1 else "descartados" if opcion == 2 else "contagiados" if opcion == 3 else "curados" if opcion == 4 else "fallecidos"
+                opcion = "sospechosos" if opcion == 1 else "descartados" if opcion == 2 else "contagiados" if opcion == 3 else "recuperados" if opcion == 4 else "fallecidos"
                 opcion_valida = True
             else:
                 print("\"Escoja una opcion valida\"")
@@ -155,13 +155,11 @@ def editar_usuarios(registros, opcion):
         status_seleccionado = validar_opciones_validas(2)
         registros[opcion][caso - 1].informe["status"] = False if status_seleccionado == 1 else True
 
-        if registros[opcion][caso - 1].informe["status"]:  # Si posee Resultados
+        if registros[opcion][caso - 1].informe["status"]:  # Si posee Covid-19
             print()
-            print("Estado del Virus:")
-            print("1. Positivo")
-            print("2. Negativo")
-            virus_seleccionado = validar_opciones_validas(2)
-            registros[opcion][caso - 1].informe["virus"] = True if virus_seleccionado == 1 else False
+            es_covid = chequear_tipo_virus(registros["sintomas"]["covid19"], registros["sintomas"]["resfriado"],
+                                           registros["sintomas"]["alergia"])
+            registros[opcion][caso - 1].informe["virus"] = es_covid  # False si no es COVID
 
     print(f"\t Se ha modificado exitosamente ha "
           f"{registros[opcion][caso - 1].nombre} {registros[opcion][caso - 1].apellido}")
@@ -202,9 +200,9 @@ def borrar_registros_usuario(usuario):
     if usuario in registros["sospechosos"]:
         registros["sospechosos"].remove(usuario)
     if usuario in registros["contagiados"]:
-        registros["sospechosos"].remove(usuario)
+        registros["contagiados"].remove(usuario)
     if usuario in registros["recuperados"]:
-        registros["sospechosos"].remove(usuario)
+        registros["recuperados"].remove(usuario)
     if usuario in registros["fallecidos"]:
         registros["fallecidos"].remove(usuario)
 
@@ -218,7 +216,7 @@ def volver_al_menu_msg():
             return False
 
 
-def chequear_tipo_virus(covid19, resfriado, alergia):
+def chequear_tipo_virus(covid19, resfriado, alergia):  # Retorna True por COVID else False
     contador = 0
     print("Registro de Sintomas del Paciente", end="\n\n")
     total_sintomas = covid19 + resfriado + alergia
@@ -249,9 +247,9 @@ def chequear_tipo_virus(covid19, resfriado, alergia):
     sintomas_parecidos_resfriado = list(set(lista_sintomas) & set(resfriado))
     sintomas_parecidos_alergia = list(set(lista_sintomas) & set(alergia))
 
+    # En base a la cantidad de sintomas parecidos a una enfermedad se escoje la enfermedad
     if (len(sintomas_parecidos_covid) >= len(sintomas_parecidos_resfriado)) and \
             (len(sintomas_parecidos_covid) >= len(sintomas_parecidos_alergia)):
-
         print("El sintoma mas probable es Corona Virus.")
         return True
     elif (len(sintomas_parecidos_resfriado) >= len(sintomas_parecidos_covid)) and \
@@ -278,29 +276,27 @@ registros = {
     }
 }
 
-chequear_tipo_virus(registros["sintomas"]["covid19"], registros["sintomas"]["resfriado"],
-                        registros["sintomas"]["alergia"])
-# while True:
-#
-#     opcion_seleccionada = mostrar_menu_principal()
-#
-#     if opcion_seleccionada == 1:  # Registrar Usuario Sospechoso
-#         volver_al_menu = False
-#         while not volver_al_menu:
-#             try:
-#                 registros["sospechosos"].append(registrar_usuario())
-#             except:
-#                 print(end="\n\n")
-#                 print("\t Hubo un Error al registrar el usuario por favor intentelo de nuevo")
-#                 print(end="\n\n")
-#             else:
-#                 print("\t Se ha registrado el usuario exitosamente en la lista de Sospechosos.", end="\n\n")
-#                 volver_al_menu = volver_al_menu_msg()
-#
-#     elif opcion_seleccionada == 2:  # Modificar Casos
-#         opcion_modificar = mostrar_menu_opciones()
-#         editar_usuarios(registros, opcion_modificar)
-#
-#     else:  # Mostrar Registros
-#         opcion_mostrar = mostrar_menu_opciones()
-#         mostrar_usuarios(registros, opcion_mostrar)
+while True:
+
+    opcion_seleccionada = mostrar_menu_principal()
+
+    if opcion_seleccionada == 1:  # Registrar Usuario Sospechoso
+        volver_al_menu = False
+        while not volver_al_menu:
+            try:
+                registros["sospechosos"].append(registrar_usuario())
+            except:
+                print(end="\n\n")
+                print("\t Hubo un Error al registrar el usuario por favor intentelo de nuevo")
+                print(end="\n\n")
+            else:
+                print("\t Se ha registrado el usuario exitosamente en la lista de Sospechosos.", end="\n\n")
+                volver_al_menu = volver_al_menu_msg()
+
+    elif opcion_seleccionada == 2:  # Modificar Casos
+        opcion_modificar = mostrar_menu_opciones()
+        editar_usuarios(registros, opcion_modificar)
+
+    else:  # Mostrar Registros
+        opcion_mostrar = mostrar_menu_opciones()
+        mostrar_usuarios(registros, opcion_mostrar)
