@@ -108,9 +108,9 @@ def mostrar_usuarios(registros, opcion):
         print(f"Pais: {usuario.pais}")
         print(f"Sexo: {usuario.genero}")
         print(f"Informe")
-        condicion = "Vivo" if usuario.informe["condition"] else "Muerto"
+        condicion = "Vivo" if usuario.informe["condition"] else "Fallecido"
         print(f"\tCondicion: {condicion}")
-        estado = "Vivo" if usuario.informe["status"] else "En Analisis"
+        estado = "Resultados Listos" if usuario.informe["status"] else "En Analisis"
         print(f"\tStatus: {estado}")
         virus = "Positivo" if usuario.informe["virus"] else "Negativo"
         print(f"\tVirus: {virus}")
@@ -164,7 +164,7 @@ def editar_usuarios(registros, opcion):
             print("\"Escoja una opcion valida\"")
         else:
             if 1 <= opcion_seleccionada <= 2:
-                registros[opcion][caso - 1].informe["status"] = False if opcion_seleccionada == 1 else True
+                registros[opcion][caso - 1].informe["status"] = True if opcion_seleccionada == 1 else False
                 opcion_valida = True
             else:
                 print("\"Escoja una opcion valida\"")
@@ -184,29 +184,50 @@ def editar_usuarios(registros, opcion):
                 opcion_valida = True
             else:
                 print("\"Escoja una opcion valida\"")
-    print()
+    print(f"\t Se ha modificado exitosamente ha "
+          f"{registros[opcion][caso - 1].nombre} {registros[opcion][caso - 1].apellido}")
+    chequear_estado_usuarios(registros[opcion][caso - 1])  # Refresh del usuario editado
 
 
 def chequear_estado_usuarios(usuario):
     if usuario.informe["condition"]:  # Si esta vivo
         if usuario.informe["status"]:  # Ya tiene resultado de los analisis
-            if (usuario in registros["contagiados"]) and not usuario.informe["virus"]:  # No es portador del virus
-                registros["contagiados"].remove(usuario)
-                registros["recuperados"].append(usuario)
-                print("El paciente esta curado.")
-        else:
-            print("Esperando Resultado de los Analisis")
-    else:  # Si ha fallecido
-        if usuario in registros["sospechosos"]:
-            registros["sospechosos"].remove(usuario)
-        if usuario in registros["contagiados"]:
-            registros["sospechosos"].remove(usuario)
-        if usuario in registros["recuperados"]:
-            registros["sospechosos"].remove(usuario)
-        if not (usuario in registros["fallecidos"]):  # Si no esta en la lista de fallecidos
-            registros["fallecidos"].append(usuario)
+            if usuario in registros["contagiados"]:  # Esta Registrado como Portador
+                if not usuario.informe["virus"]:  # Ya no es Portador
+                    borrar_registros_usuario(usuario)
+                    registros["recuperados"].append(usuario)
+                    print(f"{usuario.nombre} {usuario.apellido} ha sido registrado en los registros de recuperados.")
+            else:  # No es Registrado como Portador
+                if usuario.informe["virus"]:  # Es portador del Virus
+                    borrar_registros_usuario(usuario)
+                    registros["contagiados"].append(usuario)
+                    print(f"{usuario.nombre} {usuario.apellido} ha sido registrado en los registros de contagiados.")
+                else:  # No es Portador
+                    borrar_registros_usuario(usuario)
+                    registros["descartados"].append(usuario)
+                    print(f"{usuario.nombre} {usuario.apellido} ha sido registrado en los registros de descartados.")
 
-        print("El paciente ha fallecido.")
+        elif usuario not in registros["sospechosos"]:  # No posee Analisis Y No esta Registrado como Sospechoso
+            borrar_registros_usuario(usuario)
+            registros["sospechosos"].append(usuario)
+            print(f"{usuario.nombre} {usuario.apellido} esta en espera de los resultados de analisis.")
+
+    else:  # Si ha fallecido
+        if usuario not in registros["fallecidos"]:  # No esta Registrado como Fallecido
+            borrar_registros_usuario(usuario)
+            registros["fallecidos"].append(usuario)
+            print(f"{usuario.nombre} {usuario.apellido} ha sido registrado en los registros de fallecidos.")
+
+
+def borrar_registros_usuario(usuario):
+    if usuario in registros["sospechosos"]:
+        registros["sospechosos"].remove(usuario)
+    if usuario in registros["contagiados"]:
+        registros["sospechosos"].remove(usuario)
+    if usuario in registros["recuperados"]:
+        registros["sospechosos"].remove(usuario)
+    if usuario in registros["fallecidos"]:
+        registros["fallecidos"].remove(usuario)
 
 
 def volver_al_menu_msg():
@@ -232,7 +253,6 @@ registros = {
         "Alergia": ("Estornudos", "Congestion Nasal", "Secrecion Nasal", "Picazon", "Irritacion Ocular")
     }
 }
-
 
 while True:
 
